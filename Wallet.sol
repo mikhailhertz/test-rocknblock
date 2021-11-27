@@ -2,16 +2,18 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./TestCoin.sol";
 
 contract Wallet {
     address private owner;
+    // зашитий адрес для перевода комиссии
     address private feeAddress = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
+    // параметры для расчёта комисси
     uint feeBase = 1;
     uint feePercentage = 1;
 
     mapping (address => uint) private balances;
+    // маппинг[адрес пользователя][название токена]
     mapping (address => mapping (string => uint)) private tokenBalances;
     mapping (string => IERC20) private tokenNameToContract;
 
@@ -19,7 +21,7 @@ contract Wallet {
         return (amount * feePercentage / 100) + feeBase;
     }
 
-    function setFee(uint base, uint percentage) public {
+    function setFee(uint base, uint percentage) external {
         require(msg.sender == owner, "not allowed");
         feeBase = base;
         feePercentage = percentage;
@@ -32,11 +34,11 @@ contract Wallet {
     event LogTokenTransfer(string name, address from, address to, uint amount, uint newBalanceFrom, uint newBalanceTo);
     event LogTokenWithdraw(string name, address to, uint amount, uint newBalance);
 
-    TestCoin private tc;
+    TestCoin private testCoin = new TestCoin();
     constructor() {
       owner = msg.sender;
-      tc = new TestCoin();
-      tokenNameToContract["TC"] = IERC20(tc.getAddress());
+      // здесь можно добавлять поддерживаемые кошельком токены
+      tokenNameToContract["TC"] = IERC20(testCoin.getAddress());
     }
 
     receive() external payable {
@@ -82,10 +84,8 @@ contract Wallet {
         lock = false;
     }
 
-    event DbgEvent(uint newBalance);
-    function dbgGetFreeCoins() public {
-        tc.getFreeCoins(msg.sender);
-        emit DbgEvent(tc.balanceOf(msg.sender));
+    function dbgGetFreeCoins() external {
+        testCoin.getFreeCoins(msg.sender);
     }
 
     function tokenDeposit(uint amount, string calldata name) external {
