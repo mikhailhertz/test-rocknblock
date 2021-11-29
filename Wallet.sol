@@ -120,6 +120,7 @@ contract Wallet {
         require(tokenBalances[msg.sender][name] >= amount, "not enough tokens");
         IERC20 tokenContract = tokenNameToContract[name];
         tokenBalances[msg.sender][name] -= amount;
+        tokenContract.approve(msg.sender, amount); 
         tokenContract.transferFrom(address(this), msg.sender, amount);
         emit LogTokenWithdraw(name, msg.sender, amount, tokenBalances[msg.sender][name]);
         
